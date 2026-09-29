@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMARTWARE - Intelligent Warehouse Management System</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'%3E%3Cpath d='M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2l-2.218-.887zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6z'/%3E%3C/svg%3E">
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Typography Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- D3.js v7 for Inventory Density Heatmap Matrix -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <!-- Custom Enterprise CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <!-- Anti-Flash Theme Initializer -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('smartware_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            } catch (e) {
+                console.warn('Theme init fallback:', e);
+            }
+        })();
+    </script>
+</head>
+<body>
+
+<div class="d-flex min-vh-100 position-relative">
+
+    <!-- ====================================================== -->
+    <!-- 1. DARK SIDEBAR NAVIGATION (Shown in operational modules) -->
+    <!-- ====================================================== -->
+    <aside id="mainSidebar" class="sidebar d-none flex-column">
+        <!-- Brand Header -->
+        <div class="sidebar-brand-box d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary text-white p-2 rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                    <i class="bi bi-box-seam-fill fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0 text-white letter-spacing-1">SMARTWARE</h6>
+                    <small class="text-secondary fw-semibold" style="font-size: 0.62rem; letter-spacing: 0.05em;">INTELLIGENT WMS</small>
+                </div>
+            </div>
+            <button id="sidebarCloseBtn" class="btn btn-sm btn-link text-muted d-md-none p-0">
+                <i class="bi bi-x-lg fs-5"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex-grow-1 overflow-y-auto py-2">
+            <!-- Public / Home Link -->
+            <a href="#" class="nav-link" data-view="home">
+                <i class="bi bi-house-door"></i>
+                <span>Home & Workflow</span>
+            </a>
+
+            <div class="sidebar-nav-category">Core Operations</div>
+            <a href="#" class="nav-link" data-view="dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span>Executive Dashboard</span>
+            </a>
+
+            <div class="sidebar-nav-category">Inventory & Stock</div>
+            <a href="#" class="nav-link" data-view="products">
+                <i class="bi bi-boxes"></i>
+                <span>Product Inventory</span>
+            </a>
+            <a href="#" class="nav-link" data-view="movements">
+                <i class="bi bi-arrow-left-right"></i>
+                <span>Stock Movements</span>
+            </a>
+
+            <div class="sidebar-nav-category">Multi-Warehouse</div>
+            <a href="#" class="nav-link" data-view="warehouses">
+                <i class="bi bi-buildings"></i>
+                <span>Warehouses & Bins</span>
+            </a>
+            <a href="#" class="nav-link" data-view="transfers">
+                <i class="bi bi-truck"></i>
+                <span>Stock Transfers</span>
+                <span id="transfersBadge" class="nav-badge bg-info text-white">0</span>
+            </a>
+
+            <div class="sidebar-nav-category">Supply & Sales</div>
+            <a href="#" class="nav-link" data-view="purchasing">
+                <i class="bi bi-cart-plus"></i>
+                <span>Purchase Orders (PO)</span>
+                <span id="pendingPoBadge" class="nav-badge bg-warning text-dark">0</span>
+            </a>
+            <a href="#" class="nav-link" data-view="sales">
+                <i class="bi bi-receipt"></i>
+                <span>Sales Orders (SO)</span>
+                <span id="pendingSoBadge" class="nav-badge bg-primary text-white">0</span>
+            </a>
+            <a href="#" class="nav-link" data-view="returns">
+                <i class="bi bi-shield-exclamation"></i>
+                <span>Returns & Quarantine</span>
+            </a>
+
+            <div class="sidebar-nav-category">AI Intelligence</div>
+            <a href="#" class="nav-link" data-view="ai">
+                <i class="bi bi-cpu"></i>
+                <span>Demand Forecast & POs</span>
+            </a>
+
+            <div class="sidebar-nav-category">Analytics & Logs</div>
+            <a href="#" class="nav-link" data-view="reports">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <span>Reports & CSV Export</span>
+            </a>
+            <a href="#" class="nav-link" data-view="audit">
+                <i class="bi bi-journal-text"></i>
+                <span>Audit Logs</span>
+            </a>
+        </div>
+
+        <!-- User Role Profile Box at Bottom of Sidebar -->
+        <div class="p-3 border-top border-secondary-subtle" style="background: rgba(15, 23, 42, 0.6);">
+            <!-- Authenticated User Profile -->
+            <div id="sidebarUserBox" class="d-none align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                    <div id="userAvatar" class="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 0.8rem;">
+                        SW
+                    </div>
+                    <div class="text-truncate">
+                        <div id="userFullName" class="text-white fw-semibold small text-truncate">User</div>
+                        <div id="userRoleBadge" class="text-info fw-semibold" style="font-size: 0.68rem;">STAFF</div>
+                    </div>
+                </div>
+                <button id="sidebarLogoutBtn" class="btn btn-sm btn-outline-danger p-1 px-2" title="Sign Out">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
+            <!-- Unauthenticated / Guest View -->
+            <div id="sidebarGuestBox" class="d-flex align-items-center">
+                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                    <div class="rounded-circle bg-secondary bg-opacity-25 text-light fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div class="text-truncate">
+                        <div class="text-white-50 small fw-semibold">Guest</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">Not Signed In</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ====================================================== -->
+    <!-- 2. MAIN APPLICATION CONTENT WRAPPER                    -->
+    <!-- ====================================================== -->
+    <div class="flex-grow-1 d-flex flex-column min-vh-100 overflow-x-hidden">
+        
+        <!-- TOP APP HEADER -->
+        <header class="app-header d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <!-- Brand logo in top header (cleanly visible when sidebar is hidden on Home) -->
+                <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" id="headerBrandLogo" onclick="switchView('home'); return false;">
+                    <div class="bg-primary text-white p-2 rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                        <i class="bi bi-box-seam-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark letter-spacing-1" style="font-size: 1.05rem; line-height: 1.1;">SMARTWARE</div>
+                        <small class="text-secondary fw-semibold" style="font-size: 0.62rem; letter-spacing: 0.05em;">INTELLIGENT WMS</small>
+                    </div>
+                </a>
+
+                <!-- Mobile Toggle button (only shown when sidebar is enabled in operational modules) -->
+                <button id="sidebarToggleBtn" class="btn btn-outline-secondary btn-sm d-none">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+
+                <!-- Global Search Input (only shown in operational modules) -->
+                <div id="headerSearchWrapper" class="search-input-group input-group d-none">
+                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="globalSearchInput" class="form-control" placeholder="Search SKU, Product, PO, or Customer...">
+                </div>
+            </div>
+
+            <!-- Top Header Action Controls -->
+            <div class="d-flex align-items-center gap-2">
+                <!-- Demand Surge Quick Toggle (in operational modules) -->
+                <div id="headerSurgeWrapper" class="d-none align-items-center gap-2 bg-light px-3 py-1 rounded-pill border">
+                    <i class="bi bi-graph-up-arrow text-primary"></i>
+                    <span class="small fw-semibold text-secondary">Surge:</span>
+                    <span id="headerSurgeVal" class="small fw-bold text-primary">100%</span>
+                </div>
+
+                <!-- Last Updated Time Indicator (in operational modules) -->
+                <span id="lastUpdatedBadge" class="badge bg-light text-secondary border d-none py-2 px-3 fw-semibold">
+                    <i class="bi bi-clock-history me-1 text-primary"></i> Synced: Live
+                </span>
+
+                <!-- Refresh All Button (in operational modules) -->
+                <button id="refreshAllBtn" class="btn btn-outline-primary btn-sm d-none align-items-center gap-1 fw-semibold px-3 shadow-sm">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span>Refresh All</span>
+                </button>
+
+                <!-- Notifications Dropdown (in operational modules) -->
+                <div id="headerNotifWrapper" class="dropdown d-none">
+                    <button class="btn btn-light position-relative p-2 border rounded-circle" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                        <i class="bi bi-bell fs-6"></i>
+                        <span id="unreadNotifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                            0
+                        </span>
+                    </button>
+                    <ul id="notifDropdownMenu" class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 340px; max-height: 400px; overflow-y: auto;">
+                        <li class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom">
+                            <span class="fw-bold small">System Notifications</span>
+                            <a href="#" id="markAllReadLink" class="text-primary small text-decoration-none">Mark all read</a>
+                        </li>
+                        <div id="notifListContainer" class="py-1">
+                            <li class="p-2 text-center text-muted small">Loading alerts...</li>
+                        </div>
+                    </ul>
+                </div>
+
+                <!-- Theme Toggle Button (Light / Dark) -->
+                <button id="themeToggleBtn" class="btn btn-light position-relative p-2 border rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;" type="button" title="Switch to Dark Mode" aria-label="Toggle theme">
+                    <i id="themeToggleIcon" class="bi bi-moon-stars fs-6 text-secondary"></i>
+                </button>
+
+                <!-- Auth Buttons / User Profile Dropdown -->
+                <div id="authHeaderContainer">
+                    <!-- Shown when user is logged in -->
+                    <div id="userProfileDropdown" class="dropdown d-none">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border px-2 py-1 rounded-pill" data-bs-toggle="dropdown">
+                            <div id="headerUserAvatar" class="text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="background: linear-gradient(135deg, #2563eb, #7c3aed); width: 28px; height: 28px; font-size: 0.75rem;">
+                                NC
+                            </div>
+                            <span id="headerUserName" class="small fw-bold d-none d-sm-inline">Nikita</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width: 240px;">
+                            <li class="px-3 py-2 border-bottom">
+                                <div class="fw-bold text-dark small" id="dropdownUserName">Nikita Chaudhari</div>
+                                <div class="small text-muted" id="dropdownUserEmail" style="font-size: 0.75rem;">nik@gmail.com</div>
+                                <span class="badge bg-primary-subtle text-primary mt-1" style="font-size: 0.65rem;">Super Admin</span>
+                            </li>
+                            <li><a class="dropdown-item small py-2" href="#" onclick="openAboutCreatorModal(); return false;"><i class="bi bi-info-circle me-2 text-primary"></i>System Architecture & Info</a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li><a class="dropdown-item small text-danger py-2" href="#" id="headerLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Shown when unauthenticated in operational modules -->
+                    <div id="loginRegisterBtns" class="d-none align-items-center">
+                        <button class="btn btn-outline-primary btn-sm fw-semibold px-3" id="topNavSignInBtn">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN VIEW CONTAINER -->
+        <main class="flex-grow-1 p-3 p-lg-4">
+
+            <!-- ====================================================== -->
+            <!-- VIEW 1: PUBLIC HOME / SIMPLE WELCOME                   -->
+            <!-- ====================================================== -->
+            <div id="view-home" class="app-view">
+                <div class="container-xl px-0 py-2">
+                <!-- Auto-Logout Security Notification Banner (Shown when user is auto-logged out) -->
+                <div id="homeAutoLogoutAlert" class="alert alert-warning alert-dismissible fade show rounded-4 border-warning shadow-sm mb-4 d-none" role="alert">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="bg-warning text-dark p-2 rounded-3 fs-5 d-flex align-items-center justify-content-center shadow-sm" style="width: 42px; height: 42px;">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h6 class="fw-bold text-dark mb-0">Automatic Security Logout</h6>
+                                <span class="badge bg-danger text-white">Security Guard Active</span>
+                            </div>
+                            <p class="mb-2 text-secondary small" id="autoLogoutReasonText">
+                                For your security, your session was automatically logged out due to inactivity or tab closure.
+                            </p>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-primary fw-semibold px-3" onclick="openAuthModal('signin')">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>Sign In Again
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('homeAutoLogoutAlert').classList.add('d-none')">
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" onclick="document.getElementById('homeAutoLogoutAlert').classList.add('d-none')" aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <!-- Clean, Friendly Hero Section with In-Page Quick Access & Auth -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="row align-items-center g-4">
+                            <!-- Left Column: Simple Introduction & Highlights -->
+                            <div class="col-lg-7">
+                                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-primary-subtle text-primary fw-bold small mb-3">
+                                    <i class="bi bi-box-seam-fill"></i>
+                                    <span>SMARTWARE INVENTORY</span>
+                                </div>
+                                <h1 class="display-6 fw-bold text-dark mb-3">
+                                    Simple & Intelligent <br class="d-none d-md-inline">Warehouse Management
+                                </h1>
+                                <p class="text-secondary fs-6 mb-4 lh-base" style="max-width: 580px;">
+                                    SmartWare keeps your warehouse simple and organized. Track real-time stock across multiple hubs, generate barcode/QR labels, receive supplier shipments, and fulfill customer orders in seconds.
+                                </p>
+
+                                <!-- Guest Action Prompt (Single Unified Sign In Entry) -->
+                                <div id="homeGuestActions" class="d-flex flex-wrap gap-2 mb-4">
+                                    <button class="btn btn-primary btn-lg px-4 py-2 fw-bold shadow-sm" id="homeSignInBtn">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                                    </button>
+                                </div>
+
+                                <!-- Logged-In User Actions (Shown when signed in) -->
+                                <div id="homeUserActions" class="d-none flex-wrap gap-2 mb-4">
+                                    <button class="btn btn-primary btn-lg px-4 py-2 fw-bold shadow-sm" onclick="switchView('dashboard')">
+                                        <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-lg px-4 py-2 fw-semibold" onclick="switchView('products')">
+                                        <i class="bi bi-boxes me-2"></i>View Inventory
+                                    </button>
+                                </div>
+
+                                <div class="d-flex flex-wrap align-items-center gap-3 pt-2 text-muted small">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <span>Real-time Stock</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <span>4 Hubs Connected</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                        <span>Order Workflows</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-shield-check text-success"></i>
+                                        <span>Auto-Logout on Exit & Idle</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: System Capabilities Overview (No login forms/buttons on home page) -->
+                            <div class="col-lg-5">
+                                <!-- 1. NOT LOGGED IN: System Highlights & Operations Snapshot -->
+                                <div id="homeAuthCard" class="p-4 rounded-4 bg-light border shadow-sm text-start">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                                <i class="bi bi-shield-check fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold text-dark mb-0">SmartWare Operations</h6>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Centralized WMS Platform</small>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success fw-bold px-2 py-1">
+                                            <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.45rem;"></i>Active System
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <div class="p-3 bg-white rounded-3 border text-center">
+                                                <div class="text-primary fw-bold fs-4 mb-0">4 Hubs</div>
+                                                <small class="text-muted fw-semibold" style="font-size: 0.72rem;">Connected Warehouses</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-3 bg-white rounded-3 border text-center">
+                                                <div class="text-success fw-bold fs-4 mb-0">100%</div>
+                                                <small class="text-muted fw-semibold" style="font-size: 0.72rem;">Live Stock Tracking</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 bg-white rounded-3 border mb-3">
+                                        <div class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                                            <span class="small text-secondary"><i class="bi bi-upc-scan me-2 text-primary"></i>Barcode & QR Engine</span>
+                                            <span class="badge bg-light text-secondary border">Automated</span>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                                            <span class="small text-secondary"><i class="bi bi-cart-check me-2 text-warning"></i>PO Receiving Dock</span>
+                                            <span class="badge bg-light text-secondary border">1-Click Restock</span>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-between py-1">
+                                            <span class="small text-secondary"><i class="bi bi-truck me-2 text-success"></i>Outbound Dispatch</span>
+                                            <span class="badge bg-light text-secondary border">Real-Time</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center justify-content-center text-muted small" style="font-size: 0.75rem;">
+                                        <i class="bi bi-shield-lock-fill text-success me-1"></i>Secure Enterprise Access &bull; Role-Based Security
+                                    </div>
+                                </div>
+
+                                <!-- 2. ALREADY LOGGED IN: Simple Status Card -->
+                                <div id="homeUserCard" class="d-none p-4 rounded-4 bg-light border shadow-sm text-start">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div id="homeCardAvatar" class="bg-primary text-white rounded-circle fw-bold d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; font-size: 0.85rem;">
+                                                SW
+                                            </div>
+                                            <div>
+                                                <div id="homeCardUserName" class="fw-bold text-dark small mb-0">--</div>
+                                                <div id="homeCardUserRole" class="badge bg-primary-subtle text-primary" style="font-size: 0.68rem;">ADMIN</div>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success fw-bold">ACTIVE</span>
+                                    </div>
+
+                                    <div class="p-2 mb-3 bg-white rounded-3 border small">
+                                        <div class="d-flex justify-content-between py-1 border-bottom">
+                                            <span class="text-muted">Session Security:</span>
+                                            <span class="fw-bold text-success"><i class="bi bi-shield-lock-fill me-1"></i>Active (Auto-Logout on Idle/Exit)</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between py-1">
+                                            <span class="text-muted">Warehouse Access:</span>
+                                            <span class="fw-bold text-dark">All 4 Locations</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 mb-3">
+                                        <button class="btn btn-primary btn-sm py-2 fw-semibold d-flex align-items-center justify-content-between px-3" onclick="switchView('dashboard')">
+                                            <span><i class="bi bi-speedometer2 me-2"></i>Executive Dashboard</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm py-2 fw-semibold d-flex align-items-center justify-content-between px-3" onclick="switchView('products')">
+                                            <span><i class="bi bi-boxes me-2"></i>Products & Stock</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm py-2 fw-semibold d-flex align-items-center justify-content-between px-3" onclick="switchView('purchasing')">
+                                            <span><i class="bi bi-cart-check me-2"></i>Purchase Orders</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </div>
+
+                                    <button class="btn btn-outline-danger btn-sm w-100 py-1" id="homeCardSignOutBtn">
+                                        <i class="bi bi-box-arrow-right me-1"></i>Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How It Works in 3 Simple Steps -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <h5 class="fw-bold text-dark mb-1">How It Works</h5>
+                            <p class="text-muted small mb-0">Get started managing your warehouse in three easy steps</p>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3 bg-light text-center h-100 border">
+                                    <div class="bg-primary text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 42px; height: 42px;">
+                                        1
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">Sign In</h6>
+                                    <p class="text-muted small mb-0">Log in with your user credentials or create a new account in seconds.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3 bg-light text-center h-100 border">
+                                    <div class="bg-primary text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 42px; height: 42px;">
+                                        2
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">View Products</h6>
+                                    <p class="text-muted small mb-0">Check live stock counts, product categories, prices, and warehouse bin locations.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3 bg-light text-center h-100 border">
+                                    <div class="bg-primary text-white rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 42px; height: 42px;">
+                                        3
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">Process Orders</h6>
+                                    <p class="text-muted small mb-0">Receive supplier deliveries with 1-click receiving and fulfill customer orders smoothly.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Features Simple Cards -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h5 class="fw-bold text-dark mb-1">Key Warehouse Modules</h5>
+                                <p class="text-muted small mb-0">Explore what you can do with SmartWare</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="operational-module-card p-3 rounded-3 border h-100 d-flex flex-column justify-content-between" data-view="products" style="cursor: pointer;">
+                                    <div>
+                                        <div class="bg-primary-subtle text-primary rounded-3 p-2 d-inline-flex mb-2">
+                                            <i class="bi bi-boxes fs-4"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Product Inventory</h6>
+                                        <p class="text-muted small mb-0">Monitor SKUs, barcodes, quantities, and reorder thresholds.</p>
+                                    </div>
+                                    <div class="mt-3 pt-2 border-top">
+                                        <span class="text-primary fw-semibold small">Open Inventory &rarr;</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="operational-module-card p-3 rounded-3 border h-100 d-flex flex-column justify-content-between" data-view="purchasing" style="cursor: pointer;">
+                                    <div>
+                                        <div class="bg-warning-subtle text-warning-emphasis rounded-3 p-2 d-inline-flex mb-2">
+                                            <i class="bi bi-cart-check fs-4"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Purchase Orders</h6>
+                                        <p class="text-muted small mb-0">Create supplier orders and restock items upon dock delivery.</p>
+                                    </div>
+                                    <div class="mt-3 pt-2 border-top">
+                                        <span class="text-primary fw-semibold small">View Purchasing &rarr;</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="operational-module-card p-3 rounded-3 border h-100 d-flex flex-column justify-content-between" data-view="sales" style="cursor: pointer;">
+                                    <div>
+                                        <div class="bg-success-subtle text-success rounded-3 p-2 d-inline-flex mb-2">
+                                            <i class="bi bi-receipt fs-4"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Sales Orders</h6>
+                                        <p class="text-muted small mb-0">Book customer orders, pick stock, and dispatch items securely.</p>
+                                    </div>
+                                    <div class="mt-3 pt-2 border-top">
+                                        <span class="text-primary fw-semibold small">Manage Sales &rarr;</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="operational-module-card p-3 rounded-3 border h-100 d-flex flex-column justify-content-between" data-view="warehouses" style="cursor: pointer;">
+                                    <div>
+                                        <div class="bg-info-subtle text-info rounded-3 p-2 d-inline-flex mb-2">
+                                            <i class="bi bi-buildings fs-4"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Warehouses</h6>
+                                        <p class="text-muted small mb-0">Explore 4 multi-hub facilities, aisles, shelves, and bin racks.</p>
+                                    </div>
+                                    <div class="mt-3 pt-2 border-top">
+                                        <span class="text-primary fw-semibold small">View Warehouses &rarr;</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clean Enterprise Footer -->
+                <footer class="mt-5 pt-4 pb-4 border-top text-center text-muted small">
+                    <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-1">
+                        <span class="fw-semibold text-dark">SmartWare WMS</span>
+                        <span>&bull;</span>
+                        <span>Intelligent Warehouse Management System</span>
+                        <span>&bull;</span>
+                        <span>Engineered by <strong class="text-dark">Nikita Chaudhari</strong></span>
+                    </div>
+                    <div class="text-secondary" style="font-size: 0.76rem;">
+                        Full-Stack Python 3 &bull; Relational Engine &bull; Argon2id Cryptography &bull; MIT License
+                    </div>
+                </footer>
+
+                </div><!-- End container-xl for Home -->
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 2: EXECUTIVE DASHBOARD                            -->
+            <!-- ====================================================== -->
+            <div id="view-dashboard" class="app-view d-none">
+                <!-- Top Summary Alert Banner -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Executive Logistics Dashboard</h4>
+                        <small class="text-muted">Real-time multi-warehouse stock metrics, inventory valuation, and active alerts</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm fw-semibold" id="dashGenerateAutoPoBtn">
+                            <i class="bi bi-magic me-1"></i>1-Click AI Auto Reorder
+                        </button>
+                        <button class="btn btn-primary btn-sm fw-semibold" id="dashOpenNewPoBtn">
+                            <i class="bi bi-plus-lg me-1"></i>New Purchase Order
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 10 Primary Metric KPI Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="kpi-card kpi-primary">
+                            <div class="kpi-label">Active SKUs</div>
+                            <div class="kpi-value" id="kpiTotalSkus">--</div>
+                            <div class="kpi-sub"><span id="kpiTotalUnits" class="fw-bold text-dark">0</span> units in stock</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="kpi-card kpi-success">
+                            <div class="kpi-label">Total Inventory Valuation</div>
+                            <div class="kpi-value text-success" id="kpiTotalValuation">₹0</div>
+                            <div class="kpi-sub">Cost basis in storage</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="kpi-card kpi-info">
+                            <div class="kpi-label">Potential Revenue</div>
+                            <div class="kpi-value text-primary" id="kpiPotentialRevenue">₹0</div>
+                            <div class="kpi-sub">Margin: <span id="kpiGrossMargin" class="fw-bold text-dark">0%</span></div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="kpi-card kpi-danger">
+                            <div class="kpi-label">Low & Critical SKUs</div>
+                            <div class="kpi-value text-danger" id="kpiLowStockCount">0</div>
+                            <div class="kpi-sub"><span id="kpiCriticalCount" class="fw-bold text-danger">0</span> critical shortage</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Row of KPI Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card p-3 border-0 shadow-sm rounded-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Pending POs</div>
+                                    <div class="fs-4 fw-bold" id="kpiPendingPos">0</div>
+                                </div>
+                                <div class="bg-warning-subtle text-warning p-2 rounded-3 fs-5"><i class="bi bi-clock-history"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card p-3 border-0 shadow-sm rounded-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Dispatched Sales Value</div>
+                                    <div class="fs-4 fw-bold text-success" id="kpiSalesDispatched">₹0</div>
+                                </div>
+                                <div class="bg-success-subtle text-success p-2 rounded-3 fs-5"><i class="bi bi-currency-rupee"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card p-3 border-0 shadow-sm rounded-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Stock Health Index</div>
+                                    <div class="fs-4 fw-bold text-primary" id="kpiAvgHealth">0 / 100</div>
+                                </div>
+                                <div class="bg-primary-subtle text-primary p-2 rounded-3 fs-5"><i class="bi bi-heart-pulse"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="card p-3 border-0 shadow-sm rounded-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Active Warehouses</div>
+                                    <div class="fs-4 fw-bold" id="kpiActiveWarehouses">4</div>
+                                </div>
+                                <div class="bg-info-subtle text-info p-2 rounded-3 fs-5"><i class="bi bi-buildings"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Chart.js Visualizers -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0">Inventory Valuation by Category</h6>
+                                <span class="badge bg-light text-secondary border">Live Cost Basis</span>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartCategoryDoughnut"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0">Stock Health Distribution</h6>
+                                <span class="badge bg-light text-secondary border">Safety Tiers</span>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartStockHealthBar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alerts & Quick Reorder Table -->
+                <div class="table-card mb-4">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Low & Critical Stock Items Needing Action</h6>
+                            <small class="text-muted">Items below safety reorder threshold with AI purchase recommendation</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" id="viewAllAiReordersBtn">View All AI Forecasts</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Warehouse & Bin</th>
+                                    <th>Current Stock</th>
+                                    <th>Min Stock</th>
+                                    <th>Recommended PO</th>
+                                    <th>Risk Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lowStockTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Calculating real-time stock thresholds...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Movements Feed -->
+                <div class="table-card">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Live Stock Movements Stream</h6>
+                        <span class="badge bg-light text-secondary border">Real-Time Ledger</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Product SKU</th>
+                                    <th>Movement Type</th>
+                                    <th>Qty Change</th>
+                                    <th>Balance</th>
+                                    <th>Warehouse</th>
+                                    <th>Reference / Reason</th>
+                                    <th>User</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardRecentMovementsBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-3 text-muted">Loading live movement stream...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 3: PRODUCT INVENTORY                              -->
+            <!-- ====================================================== -->
+            <div id="view-products" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Master Product Catalog</h4>
+                        <small class="text-muted">Multi-warehouse SKU tracking, pricing, reorder levels, and location bins</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="exportProductsCsvBtn">
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button>
+                        <button class="btn btn-primary btn-sm fw-semibold" id="openAddProductModalBtn">
+                            <i class="bi bi-plus-lg me-1"></i>Add New Product
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters Bar -->
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-4">
+                            <input type="text" id="filterProductSearch" class="form-control form-control-sm" placeholder="Search by SKU, Barcode, or Name...">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filterCategorySelect" class="form-select form-select-sm">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filterWarehouseSelect" class="form-select form-select-sm">
+                                <option value="">All Warehouses</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="filterStockStatusSelect" class="form-select form-select-sm">
+                                <option value="">All Stock Statuses</option>
+                                <option value="HEALTHY">Healthy Stock</option>
+                                <option value="LOW_STOCK">Low Stock</option>
+                                <option value="CRITICAL">Critical Stock</option>
+                                <option value="OUT_OF_STOCK">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Warehouse & Bin</th>
+                                    <th>Stock Qty</th>
+                                    <th>Stock Status</th>
+                                    <th>Purchase Price</th>
+                                    <th>Selling Price</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">Loading inventory catalog...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 4: STOCK MOVEMENTS LEDGER                         -->
+            <!-- ====================================================== -->
+            <div id="view-movements" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Stock Movements Ledger</h4>
+                        <small class="text-muted">Immutable audit history of all receipts, dispatches, transfers, and cycle adjustments</small>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="exportMovementsCsvBtn">
+                        <i class="bi bi-download me-1"></i>Export Movements CSV
+                    </button>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Product SKU & Name</th>
+                                    <th>Warehouse</th>
+                                    <th>Movement Type</th>
+                                    <th>Quantity</th>
+                                    <th>Previous Balance</th>
+                                    <th>New Balance</th>
+                                    <th>Reference ID</th>
+                                    <th>Reason / Notes</th>
+                                    <th>User</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movementsTableBody">
+                                <tr>
+                                    <td colspan="10" class="text-center py-4 text-muted">Loading ledger...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 5: WAREHOUSES & LOCATIONS (RACK/SHELF/BIN)        -->
+            <!-- ====================================================== -->
+            <div id="view-warehouses" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Warehouses & Storage Locations</h4>
+                        <small class="text-muted">Physical facility hubs, hierarchical storage bins (Rack &rarr; Shelf &rarr; Bin), and real-time inventory density heatmaps</small>
+                    </div>
+                </div>
+
+                <!-- Warehouses Grid -->
+                <div class="row g-3 mb-4" id="warehousesCardsContainer">
+                    <!-- Loaded dynamically -->
+                </div>
+
+                <!-- INVENTORY DENSITY HEATMAP MODULE (D3.js & Chart.js) -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                    <div class="card-header bg-white border-bottom p-3 p-md-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-danger-subtle text-danger fw-bold"><i class="bi bi-fire me-1"></i>Storage Density Heatmap</span>
+                                    <span class="badge bg-primary-subtle text-primary font-mono fw-semibold">D3.js &amp; Chart.js Engine</span>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-0">Bin Rack Inventory Density Heatmap</h5>
+                                <small class="text-muted">Visual matrix of storage utilization across aisles, racks, shelves, and bins. Identifies capacity hotspots and underutilized racks in real-time.</small>
+                            </div>
+                            <!-- Heatmap Controls & Filter -->
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="input-group input-group-sm" style="min-width: 220px;">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-buildings"></i></span>
+                                    <select id="heatmapWarehouseFilter" class="form-select form-select-sm fw-semibold">
+                                        <option value="ALL">All Warehouses (Global View)</option>
+                                    </select>
+                                </div>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-secondary active fw-semibold" id="heatmapModePctBtn" title="Show Utilization Percentage">
+                                        <i class="bi bi-percent me-1"></i>Utilization %
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary fw-semibold" id="heatmapModeUnitsBtn" title="Show Units Stored vs Capacity">
+                                        <i class="bi bi-boxes me-1"></i>Units Stored
+                                    </button>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger fw-semibold" id="heatmapHighlightHotspotsBtn">
+                                    <i class="bi bi-lightning-charge me-1"></i>Filter Hotspots (&gt;75%)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-3 p-md-4">
+                        <!-- Density KPI Summary Metrics -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6 col-xl-3">
+                                <div class="p-3 rounded-3 border bg-light h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-muted small fw-semibold">Peak Density Rack</span>
+                                        <span class="badge bg-danger text-white"><i class="bi bi-fire me-1"></i>Hotspot</span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-danger" id="densityPeakRack">--</div>
+                                    <small class="text-muted" id="densityPeakRackDetail">Calculating...</small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-3">
+                                <div class="p-3 rounded-3 border bg-light h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-muted small fw-semibold">Average Utilization</span>
+                                        <span class="badge bg-primary-subtle text-primary">All Bins</span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-primary" id="densityAvgUtilization">0%</div>
+                                    <small class="text-muted" id="densityAvgDetail">Total Storage Load</small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-3">
+                                <div class="p-3 rounded-3 border bg-light h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-muted small fw-semibold">High Density Hotspots</span>
+                                        <span class="badge bg-warning text-dark">&gt;75% Cap</span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-warning-emphasis" id="densityHotspotCount">0</div>
+                                    <small class="text-muted" id="densityHotspotDetail">Racks needing load rebalance</small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-xl-3">
+                                <div class="p-3 rounded-3 border bg-light h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-muted small fw-semibold">Total Storage Capacity</span>
+                                        <span class="badge bg-success-subtle text-success">Active Bins</span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-success" id="densityTotalUnits">0 / 0</div>
+                                    <small class="text-muted" id="densityAvailableSpace">Available: 0 units</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Visualization Canvas & Rack Ranking Grid -->
+                        <div class="row g-4">
+                            <!-- Left: D3.js 2D Inventory Density Heatmap Matrix -->
+                            <div class="col-xl-8">
+                                <div class="border rounded-4 p-3 bg-white h-100 position-relative">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold mb-0">
+                                            <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>Storage Matrix (Racks &times; Shelves &times; Bins)
+                                        </h6>
+                                        <!-- Heatmap Legend -->
+                                        <div class="d-flex align-items-center gap-1 small" style="font-size: 0.72rem;">
+                                            <span class="text-muted me-1">Density:</span>
+                                            <span class="badge" style="background-color: #10b981; color: white;">0-40% Low</span>
+                                            <span class="badge" style="background-color: #3b82f6; color: white;">40-70% Opt</span>
+                                            <span class="badge" style="background-color: #f59e0b; color: white;">70-85% High</span>
+                                            <span class="badge" style="background-color: #ef4444; color: white;">&gt;85% Critical</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- D3 Heatmap SVG Container -->
+                                    <div id="d3InventoryHeatmapContainer" class="position-relative overflow-x-auto" style="min-height: 380px;">
+                                        <!-- D3 rendered SVG -->
+                                    </div>
+
+                                    <!-- Tooltip floating card -->
+                                    <div id="d3HeatmapTooltip" class="position-absolute bg-dark text-white p-3 rounded-3 shadow-lg pointer-events-none d-none" style="z-index: 1050; max-width: 320px; font-size: 0.8rem; pointer-events: none;">
+                                        <!-- Dynamic Tooltip Content -->
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top text-muted small" style="font-size: 0.75rem;">
+                                        <span><i class="bi bi-cursor-fill me-1"></i>Click on any bin rack cell to inspect stored items and filter table below</span>
+                                        <span id="selectedCellInfo" class="fw-semibold text-primary"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Chart.js Rack Utilization Leaderboard -->
+                            <div class="col-xl-4">
+                                <div class="border rounded-4 p-3 bg-white h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill text-danger me-2"></i>Highest Storage Utilization Racks</h6>
+                                        <span class="badge bg-light text-secondary border">Ranked</span>
+                                    </div>
+                                    <p class="text-muted small mb-2" style="font-size: 0.75rem;">Bin racks with highest storage consumption ranked from highest to lowest utilization.</p>
+                                    <div class="flex-grow-1" style="min-height: 260px; max-height: 340px; position: relative;">
+                                        <canvas id="chartRackUtilization"></canvas>
+                                    </div>
+
+                                    <!-- Selected Bin Quick Detail Box -->
+                                    <div id="heatmapSelectedBinCard" class="mt-3 p-3 bg-light rounded-3 border d-none">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <span class="badge bg-primary text-white font-mono" id="selBinCode">--</span>
+                                                <h6 class="fw-bold text-dark mt-1 mb-0" id="selBinWarehouse">--</h6>
+                                            </div>
+                                            <span class="badge bg-danger" id="selBinDensityBadge">0% Full</span>
+                                        </div>
+                                        <div class="small text-secondary mb-2">
+                                            <div>Location: <strong id="selBinRackShelf">Rack -- / Shelf -- / Bin --</strong></div>
+                                            <div>Capacity: <strong id="selBinCapacity">0 units</strong> | Stored: <strong id="selBinStored">0 units</strong></div>
+                                        </div>
+                                        <div class="border-top pt-2">
+                                            <span class="fw-semibold small text-dark d-block mb-1">Stored Products:</span>
+                                            <div id="selBinProductsList" class="small text-muted" style="max-height: 100px; overflow-y: auto;">
+                                                --
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Storage Bins Table -->
+                <div class="table-card">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">Warehouse Bin Locations Master Catalog</h6>
+                            <span class="badge bg-light text-secondary border">Hierarchy: Hub &rarr; Rack &rarr; Shelf &rarr; Bin</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="binsFilterBadge" class="badge bg-primary-subtle text-primary d-none"></span>
+                            <button id="resetBinsFilterBtn" class="btn btn-outline-secondary btn-sm d-none">Reset Filter</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Location Code</th>
+                                    <th>Warehouse</th>
+                                    <th>Rack</th>
+                                    <th>Shelf</th>
+                                    <th>Bin</th>
+                                    <th>Capacity</th>
+                                    <th>Units Stored</th>
+                                    <th>Utilization</th>
+                                    <th>Density Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locationsTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">Loading location bins...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 6: STOCK TRANSFERS                                -->
+            <!-- ====================================================== -->
+            <div id="view-transfers" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Inter-Warehouse Stock Transfers</h4>
+                        <small class="text-muted">Balance stock across hubs: Source &rarr; In-Transit &rarr; Destination Receive</small>
+                    </div>
+                    <button class="btn btn-primary btn-sm fw-semibold" id="openNewTransferModalBtn">
+                        <i class="bi bi-plus-lg me-1"></i>Initiate Transfer
+                    </button>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Transfer #</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Source Hub</th>
+                                    <th>Destination Hub</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transfersTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Loading transfers...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 7: PURCHASING & SUPPLIER ORDERS                   -->
+            <!-- ====================================================== -->
+            <div id="view-purchasing" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Purchase Orders & Dock Receiving</h4>
+                        <small class="text-muted">Supplier orders, status tracking, and 1-click dock receive with inventory restock</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="exportPurchasesCsvBtn">
+                            <i class="bi bi-download me-1"></i>Export POs CSV
+                        </button>
+                        <button class="btn btn-primary btn-sm fw-semibold" id="openCreatePoModalBtn">
+                            <i class="bi bi-plus-lg me-1"></i>Create Purchase Order
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>PO Number</th>
+                                    <th>Supplier</th>
+                                    <th>Destination Warehouse</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Expected Delivery</th>
+                                    <th>Created By</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchaseOrdersTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Loading purchase orders...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 8: SALES ORDERS & DISPATCH                        -->
+            <!-- ====================================================== -->
+            <div id="view-sales" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Customer Sales Orders & Dispatch</h4>
+                        <small class="text-muted">Order picking, pre-dispatch stock verification, and automatic inventory deduction</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="exportSalesCsvBtn">
+                            <i class="bi bi-download me-1"></i>Export SOs CSV
+                        </button>
+                        <button class="btn btn-primary btn-sm fw-semibold" id="openCreateSoModalBtn">
+                            <i class="bi bi-plus-lg me-1"></i>Create Sales Order
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>SO Number</th>
+                                    <th>Customer Name</th>
+                                    <th>Fulfillment Warehouse</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesOrdersTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Loading sales orders...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 9: RETURNS & QUARANTINE                           -->
+            <!-- ====================================================== -->
+            <div id="view-returns" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">Returns & Quarantine Inspection Bay</h4>
+                        <small class="text-muted">Customer returns held in isolation pending inspection decision: Restock, Damaged, or Scrap</small>
+                    </div>
+                    <button class="btn btn-primary btn-sm fw-semibold" id="openLogReturnModalBtn">
+                        <i class="bi bi-plus-lg me-1"></i>Log Customer Return
+                    </button>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Customer</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Reason</th>
+                                    <th>Condition</th>
+                                    <th>Remedial Decision</th>
+                                    <th class="text-end">Inspect & Resolve</th>
+                                </tr>
+                            </thead>
+                            <tbody id="returnsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Loading quarantine records...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 10: AI DEMAND INTELLIGENCE & SURGE SIMULATOR      -->
+            <!-- ====================================================== -->
+            <div id="view-ai" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">AI Demand Intelligence & Forecasting</h4>
+                        <small class="text-muted">Predictive sales velocity, dynamic demand surge simulation, and anti-duplicate auto-reorders</small>
+                    </div>
+                    <button class="btn btn-primary btn-sm fw-semibold" id="aiAutoGenerateAllPoBtn">
+                        <i class="bi bi-magic me-1"></i>Generate POs for All Low Stock
+                    </button>
+                </div>
+
+                <!-- Demand Surge Interactive Control Card -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-primary text-white">
+                    <div class="row align-items-center g-3">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold mb-1"><i class="bi bi-sliders me-2"></i>Demand Surge Simulation Slider</h5>
+                            <p class="small text-white-50 mb-0">
+                                Simulate seasonal demand spikes (+50%) or supply dips (-30%). System dynamically recalculates 7-day and 30-day requirements in real time without refreshing.
+                            </p>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-white text-dark fs-6 px-3 py-2 fw-bold" id="surgeValueDisplay">100%</span>
+                                <input type="range" class="form-range" id="demandSurgeSlider" min="50" max="200" step="5" value="100">
+                                <button class="btn btn-outline-light btn-sm fw-semibold text-nowrap" id="resetSurgeBtn">Reset 100%</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forecast Table -->
+                <div class="table-card">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0">SKU Demand Projections & Safety Stock Coverage</h6>
+                        <span class="badge bg-light text-secondary border">Mathematical Run-Rate Model</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product Name</th>
+                                    <th>Current Stock</th>
+                                    <th>Daily Velocity</th>
+                                    <th>7-Day Demand</th>
+                                    <th>30-Day Demand</th>
+                                    <th>Days of Supply</th>
+                                    <th>Shortage Risk</th>
+                                    <th>Recommended PO Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="aiForecastTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">Running AI forecasting models...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 11: REPORTS & CSV EXPORTS                         -->
+            <!-- ====================================================== -->
+            <div id="view-reports" class="app-view d-none">
+                <div class="mb-4">
+                    <h4 class="fw-bold mb-0">Warehouse Analytics & Reports</h4>
+                    <small class="text-muted">Export clean, production-ready CSV spreadsheets for finance, audits, and operations</small>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-primary text-white p-3 rounded-3"><i class="bi bi-boxes fs-4"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Inventory Valuation Report</h6>
+                                    <small class="text-muted">All SKUs, unit costs, selling values, and bins</small>
+                                </div>
+                            </div>
+                            <p class="text-secondary small mb-4">Complete breakdown of inventory quantities, cost valuation basis, and physical rack locations across all 4 hubs.</p>
+                            <a href="/api/export_csv?type=products" class="btn btn-outline-primary btn-sm fw-semibold mt-auto">
+                                <i class="bi bi-download me-1"></i>Download CSV
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-warning text-dark p-3 rounded-3"><i class="bi bi-cart-check fs-4"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Purchase Orders Report</h6>
+                                    <small class="text-muted">Supplier orders, PO values, and statuses</small>
+                                </div>
+                            </div>
+                            <p class="text-secondary small mb-4">Historical record of all supplier purchase orders, delivery statuses, expected fulfillment dates, and purchase totals.</p>
+                            <a href="/api/export_csv?type=purchase_orders" class="btn btn-outline-warning text-dark btn-sm fw-semibold mt-auto">
+                                <i class="bi bi-download me-1"></i>Download CSV
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-success text-white p-3 rounded-3"><i class="bi bi-receipt fs-4"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Sales Orders Report</h6>
+                                    <small class="text-muted">Customer orders, dispatches, and revenue</small>
+                                </div>
+                            </div>
+                            <p class="text-secondary small mb-4">Export customer sales bookings, fulfillment dispatch records, warehouse distribution centers, and order amounts.</p>
+                            <a href="/api/export_csv?type=sales_orders" class="btn btn-outline-success btn-sm fw-semibold mt-auto">
+                                <i class="bi bi-download me-1"></i>Download CSV
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-info text-white p-3 rounded-3"><i class="bi bi-arrow-left-right fs-4"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Stock Movements Ledger</h6>
+                                    <small class="text-muted">Every delta, receipt, and adjustment</small>
+                                </div>
+                            </div>
+                            <p class="text-secondary small mb-4">Export detailed stock transaction movements including receipts, sales dispatches, transfers, and cycle count corrections.</p>
+                            <a href="/api/export_csv?type=movements" class="btn btn-outline-info btn-sm fw-semibold mt-auto">
+                                <i class="bi bi-download me-1"></i>Download CSV
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-dark text-white p-3 rounded-3"><i class="bi bi-journal-check fs-4"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">System Audit Trail Report</h6>
+                                    <small class="text-muted">Compliance, user roles, actions, and IPs</small>
+                                </div>
+                            </div>
+                            <p class="text-secondary small mb-4">Complete immutable audit trail logging user sign-in events, stock adjustments, purchase receiving, and sales dispatch operations.</p>
+                            <a href="/api/export_csv?type=audit_logs" class="btn btn-outline-dark btn-sm fw-semibold mt-auto">
+                                <i class="bi bi-download me-1"></i>Download CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- VIEW 12: SYSTEM AUDIT LOGS                             -->
+            <!-- ====================================================== -->
+            <div id="view-audit" class="app-view d-none">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">System Compliance & Audit Trail</h4>
+                        <small class="text-muted">Immutable log of all user activities, inventory changes, and system modifications</small>
+                    </div>
+                    <a href="/api/export_csv?type=audit_logs" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-download me-1"></i>Export Audit CSV
+                    </a>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="custom-table table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User Role</th>
+                                    <th>Module</th>
+                                    <th>Action</th>
+                                    <th>Record ID</th>
+                                    <th>Old Balance</th>
+                                    <th>New Balance</th>
+                                    <th>Details</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">Loading audit records...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- 3. MODALS & INTERACTIVE OVERLAYS                       -->
+<!-- ====================================================== -->
+
+<!-- UNIFIED MODAL: AUTHENTICATION (SIGN IN & REGISTER IN 1 PLACE) -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary text-white p-2 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0">SmartWare Access</h5>
+                        <p class="text-muted small mb-0">Sign in or create your warehouse account</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Tab Switcher: Sign In vs Register -->
+            <div class="px-4 pt-3">
+                <ul class="nav nav-pills nav-fill bg-light p-1 rounded-3" id="authTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold py-2 rounded-3" id="tab-signin-btn" data-bs-toggle="pill" data-bs-target="#tab-signin" type="button" role="tab">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold py-2 rounded-3" id="tab-register-btn" data-bs-toggle="pill" data-bs-target="#tab-register" type="button" role="tab">
+                            <i class="bi bi-person-plus me-1"></i> Register
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="modal-body px-4 py-3">
+                <div class="tab-content" id="authTabContent">
+                    <!-- 1. SIGN IN TAB -->
+                    <div class="tab-pane fade show active" id="tab-signin" role="tabpanel">
+                        <div id="loginAlertBox" class="alert alert-danger py-2 small" style="display: none;"></div>
+
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Email or Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                                    <input type="text" id="loginIdentifier" class="form-control" placeholder="Enter username or email address" required autocomplete="username">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                                </div>
+                                <div class="form-text text-muted" style="font-size: 0.72rem;">
+                                    <i class="bi bi-shield-lock me-1 text-success"></i>Enter your secure account password
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 2. REGISTER TAB -->
+                    <div class="tab-pane fade" id="tab-register" role="tabpanel">
+                        <div id="registerAlertBox" class="alert alert-danger py-2 small" style="display: none;"></div>
+
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person-badge"></i></span>
+                                    <input type="text" id="regFullName" class="form-control" placeholder="e.g. Nikita Chaudhari" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Role</label>
+                                <select id="regRole" class="form-select">
+                                    <option value="Warehouse Staff" selected>Warehouse Staff</option>
+                                    <option value="Warehouse Manager">Warehouse Manager</option>
+                                    <option value="Admin">Administrator</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-key"></i></span>
+                                    <input type="password" id="regPassword" class="form-control" placeholder="At least 6 characters" minlength="6" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                Create Account
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: THERMAL PRINTABLE BARCODE & QR BADGE -->
+<div class="modal fade" id="thermalPrintBadgeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0 no-print">
+                <h5 class="modal-title fw-bold"><i class="bi bi-upc-scan me-2 text-primary"></i>Thermal Label & QR Badge</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Thermal Label Printable Container -->
+                <div class="thermal-label-container" id="printableLabelContent">
+                    <div class="thermal-header">
+                        <div class="fw-bold fs-5">SMARTWARE</div>
+                        <small class="text-uppercase" style="letter-spacing: 2px;">Warehouse Asset Tag</small>
+                    </div>
+                    
+                    <div class="text-center mb-3">
+                        <div class="fw-bold fs-6" id="badgeProductName">UltraHD 4K Scanner Pro</div>
+                        <div class="small fw-semibold text-muted" id="badgeSku">SKU: PRD-1001</div>
+                    </div>
+
+                    <!-- Simulated QR & Barcode Section -->
+                    <div class="d-flex align-items-center justify-content-center gap-3 my-3">
+                        <div class="qr-box p-2" id="badgeQrContainer">
+                            <!-- SVG QR rendering -->
+                        </div>
+                    </div>
+
+                    <div class="barcode-box my-2" id="badgeBarcodeContainer">
+                        ||| | |||| | ||| |||| |
+                    </div>
+                    <div class="text-center font-mono small fw-bold" id="badgeBarcodeText">8901234567891</div>
+
+                    <hr class="my-2" style="border-top: 1px dashed #000;">
+
+                    <div class="small">
+                        <div class="d-flex justify-content-between">
+                            <span>LOCATION:</span>
+                            <span class="fw-bold" id="badgeLocation">CENTRAL-R01-S02-B04</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>CATEGORY:</span>
+                            <span class="fw-bold" id="badgeCategory">Electronics</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>SELLING PRICE:</span>
+                            <span class="fw-bold" id="badgePrice">₹28,999.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 no-print">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary btn-sm fw-bold px-4" onclick="window.print();">
+                    <i class="bi bi-printer me-1"></i>Print Thermal Label
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: STOCK ADJUSTMENT (+/-) -->
+<div class="modal fade" id="stockAdjustModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-sliders me-2 text-primary"></i>Adjust Warehouse Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="adjustAlertBox" class="alert alert-danger py-2 small" style="display: none;"></div>
+                <form id="stockAdjustForm">
+                    <input type="hidden" id="adjustProductId">
+                    <div class="mb-3 bg-light p-3 rounded-3">
+                        <div class="fw-bold" id="adjustProductName">Product</div>
+                        <div class="small text-muted" id="adjustProductSku">SKU: --</div>
+                        <div class="small fw-semibold mt-1">Current Stock: <span id="adjustCurrentStock" class="badge bg-primary">0</span> units</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Quantity Change (+ to add, - to deduct)</label>
+                        <input type="number" id="adjustQtyChange" class="form-control" placeholder="e.g. +20 or -5" required>
+                        <small class="text-muted">Enter positive number for stock count receipt, negative for damaged/missing items.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Adjustment Reason</label>
+                        <select id="adjustReasonSelect" class="form-select">
+                            <option value="Cycle Count Correction">Physical Cycle Count Correction</option>
+                            <option value="Manual Delivery Receipt">Manual Delivery Intake</option>
+                            <option value="Damaged Goods Discard">Damaged Goods Removal</option>
+                            <option value="Missing Inventory Write-off">Missing / Lost Inventory Write-off</option>
+                            <option value="Internal Quality Audit">Internal Quality Audit</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Notes / Reference</label>
+                        <input type="text" id="adjustNotesInput" class="form-control" placeholder="e.g. Floor audit audit slip #4401">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        Apply Stock Change & Record Movement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: ADD PRODUCT -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2 text-primary"></i>Register New Master SKU</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="addProductAlert" class="alert alert-danger py-2 small" style="display: none;"></div>
+                <form id="addProductForm">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">SKU Code (Unique)</label>
+                            <input type="text" id="addSku" class="form-control" placeholder="e.g. PRD-1025" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Barcode / EAN (Unique)</label>
+                            <input type="text" id="addBarcode" class="form-control" placeholder="e.g. 8901234567825" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-semibold">Product Name</label>
+                            <input type="text" id="addName" class="form-control" placeholder="e.g. Precision Digital Caliper 150mm" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Category</label>
+                            <select id="addCategory" class="form-select">
+                                <option value="Electronics">Electronics</option>
+                                <option value="Machinery Parts">Machinery Parts</option>
+                                <option value="Storage Equipment">Storage Equipment</option>
+                                <option value="Packaging">Packaging</option>
+                                <option value="Safety & Hardware">Safety & Hardware</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Purchase Price (₹)</label>
+                            <input type="number" step="0.01" id="addPurchasePrice" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Selling Price (₹)</label>
+                            <input type="number" step="0.01" id="addSellingPrice" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Initial Quantity</label>
+                            <input type="number" id="addQuantity" class="form-control" placeholder="0" min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Reorder Threshold</label>
+                            <input type="number" id="addReorderPoint" class="form-control" placeholder="0" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Warehouse</label>
+                            <select id="addWarehouseSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Location Rack/Shelf/Bin</label>
+                            <div class="input-group">
+                                <input type="text" id="addRack" class="form-control" placeholder="R01">
+                                <input type="text" id="addShelf" class="form-control" placeholder="S01">
+                                <input type="text" id="addBin" class="form-control" placeholder="B01">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Preferred Supplier</label>
+                            <select id="addSupplierSelect" class="form-select"></select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        Save Product to Master Catalog
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CREATE PURCHASE ORDER -->
+<div class="modal fade" id="createPoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-cart-plus me-2 text-primary"></i>Draft New Purchase Order (PO)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="createPoForm">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Supplier</label>
+                            <select id="poSupplierSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Destination Warehouse</label>
+                            <select id="poWarehouseSelect" class="form-select" required></select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Product to Order</label>
+                            <select id="poProductSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Order Quantity</label>
+                            <input type="number" id="poQuantityInput" class="form-control" placeholder="0" min="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Unit Cost (₹)</label>
+                            <input type="number" step="0.01" id="poUnitCostInput" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Expected Dock Delivery Date</label>
+                        <input type="date" id="poDeliveryDate" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        Generate & Submit Purchase Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CREATE SALES ORDER -->
+<div class="modal fade" id="createSoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-receipt me-2 text-primary"></i>Book Customer Sales Order (SO)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="soAlertBox" class="alert alert-danger py-2 small" style="display: none;"></div>
+                <form id="createSoForm">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Customer</label>
+                            <select id="soCustomerSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Fulfillment Warehouse</label>
+                            <select id="soWarehouseSelect" class="form-select" required></select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Select Product</label>
+                            <select id="soProductSelect" class="form-select" required></select>
+                            <div class="small text-muted mt-1" id="soStockAvailableInfo">Available: --</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Order Quantity</label>
+                            <input type="number" id="soQuantityInput" class="form-control" placeholder="0" min="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Selling Price (₹)</label>
+                            <input type="number" step="0.01" id="soUnitPriceInput" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        Book Sales Order for Picking
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: INITIATE INTER-WAREHOUSE TRANSFER -->
+<div class="modal fade" id="createTransferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-truck me-2 text-primary"></i>Initiate Inter-Warehouse Transfer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="trfAlertBox" class="alert alert-danger py-2 small" style="display: none;"></div>
+                <form id="createTransferForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Product</label>
+                        <select id="trfProductSelect" class="form-select" required></select>
+                        <div class="small text-muted mt-1" id="trfAvailableStockInfo">Available: --</div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Source Hub</label>
+                            <select id="trfSourceSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Destination Hub</label>
+                            <select id="trfDestSelect" class="form-select" required></select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Transfer Quantity</label>
+                        <input type="number" id="trfQuantityInput" class="form-control" placeholder="0" min="1" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        Confirm & Transfer Out
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: LOG CUSTOMER RETURN -->
+<div class="modal fade" id="createReturnModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2 text-primary"></i>Log Customer Return</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="createReturnForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Customer</label>
+                        <input type="text" id="retCustomerName" class="form-control" placeholder="e.g. Metro Logistics Network" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Product Returned</label>
+                        <select id="retProductSelect" class="form-select" required></select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Quantity</label>
+                            <input type="number" id="retQuantity" class="form-control" placeholder="0" min="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Warehouse Bay</label>
+                            <select id="retWarehouseSelect" class="form-select" required></select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Reason for Return</label>
+                        <input type="text" id="retReason" class="form-control" placeholder="e.g. Outer packaging seal opened upon courier arrival" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        Register Return & Quarantine
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: INACTIVITY AUTO-LOGOUT COUNTDOWN WARNING -->
+<div class="modal fade" id="inactivityWarningModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="bg-warning bg-opacity-10 p-4 border-bottom border-warning-subtle text-center">
+                <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-clock-history fs-2"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Session Inactivity Warning</h5>
+                <small class="text-muted fw-semibold">Security Session Timeout Notice</small>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-secondary mb-3 small lh-base">
+                    You have been inactive for an extended period. For your security, your session will automatically expire in:
+                </p>
+                <!-- Countdown Display -->
+                <div class="display-5 fw-bold text-danger mb-2 font-monospace" id="inactivityCountdownDisplay">
+                    60s
+                </div>
+                <div class="progress mb-4" style="height: 8px;">
+                    <div id="inactivityProgressBar" class="progress-bar bg-danger progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%;"></div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <button type="button" id="keepSessionAliveBtn" class="btn btn-primary py-2 fw-bold shadow-sm">
+                        <i class="bi bi-check-circle-fill me-1"></i> Keep Session Active
+                    </button>
+                    <button type="button" id="inactivityLogoutNowBtn" class="btn btn-outline-danger py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-right me-1"></i> Logout Now
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 py-2 justify-content-center">
+                <small class="text-muted" style="font-size: 0.72rem;">
+                    <i class="bi bi-shield-lock-fill text-success me-1"></i> SmartWare Enterprise Security System
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: SECURITY CENTER & SESSION CONTROLS -->
+<div class="modal fade" id="securityCenterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-success text-white p-2 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0">Enterprise Security Center</h5>
+                        <p class="text-muted small mb-0">Enterprise Session & Account Security Controls</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Security Checklist -->
+                <div class="list-group list-group-flush border rounded-3 mb-3">
+                    <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-box-arrow-left text-success fs-5"></i>
+                            <div>
+                                <div class="fw-semibold small text-dark">Auto-Logout on Tab Close</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Tab or window closure immediately invalidates session tokens</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success fw-bold">Active</span>
+                    </div>
+
+                    <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-hourglass-split text-primary fs-5"></i>
+                            <div>
+                                <div class="fw-semibold small text-dark">Idle Inactivity Timeout</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Auto-logout after 10 minutes of inactivity with 60-second warning</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary fw-bold" id="securityInactivityRemainingBadge">10m Active</span>
+                    </div>
+
+                    <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-key-fill text-warning fs-5"></i>
+                            <div>
+                                <div class="fw-semibold small text-dark">Password Encryption (Argon2id - OWASP Gold Standard)</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Memory-hard (64 MB RAM, 2 iterations, GPU/ASIC brute-force protected)</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success fw-bold">Argon2id Enforced</span>
+                    </div>
+
+                    <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-slash text-danger fs-5"></i>
+                            <div>
+                                <div class="fw-semibold small text-dark">Brute-Force Protection</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Account locked for 5 minutes after 5 consecutive failed attempts</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success fw-bold">Active</span>
+                    </div>
+
+                    <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-lock-fill text-info fs-5"></i>
+                            <div>
+                                <div class="fw-semibold small text-dark">Enterprise Security Headers</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">nosniff, SAMEORIGIN, no-store, XSS-Protection</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success fw-bold">Active</span>
+                    </div>
+                </div>
+
+                <div class="bg-light p-3 rounded-3 border text-center">
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-success small fw-semibold">
+                        <i class="bi bi-shield-check fs-5"></i>
+                        <span>All Enterprise Security Standards Fully Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-secondary w-100 fw-semibold" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: ABOUT THE CREATOR & ENGINEERING LEADERSHIP -->
+<div class="modal fade" id="aboutCreatorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <!-- Header with elegant gradient banner -->
+            <div class="p-4 text-center position-relative text-white" style="background: linear-gradient(135deg, #4f46e5, #7c3aed, #ec4899);">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                <div class="creator-gradient-border shadow-lg mb-3">
+                    <div class="bg-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 82px; height: 82px;">
+                        <i class="bi bi-person-fill fs-1 text-primary" style="background: linear-gradient(135deg, #ec4899, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-1 text-white">Nikita Chaudhari</h4>
+                <div class="badge badge-women-tech rounded-pill px-3 py-1 shadow-sm mb-2" style="font-size: 0.8rem;">
+                    <i class="bi bi-stars text-danger me-1"></i>Women in Tech Leadership
+                </div>
+                <p class="small text-white-50 mb-0">Founder, Lead Software Engineer & Supply Chain Systems Architect</p>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Executive Bio & Vision -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark text-uppercase small letter-spacing-1 mb-2">
+                        <i class="bi bi-code-slash text-primary me-1"></i>Engineering Vision
+                    </h6>
+                    <p class="text-secondary small lh-base mb-0">
+                        SmartWare was conceived and engineered by <strong>Nikita Chaudhari</strong> with the goal of creating a dependable, intelligent, and human-friendly warehouse management platform. Built with Python 3, modern JavaScript, and an ACID-compliant relational core, the system emphasizes mathematical precision, clean architecture, and OWASP-grade cryptographic security.
+                    </p>
+                </div>
+
+                <!-- Core Engineering Milestones & Architecture Badges -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark text-uppercase small letter-spacing-1 mb-2">
+                        <i class="bi bi-cpu text-primary me-1"></i>Architectural Pillars
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-light text-dark border p-2 px-3 fw-semibold small">
+                            <i class="bi bi-shield-lock-fill text-success me-1"></i>OWASP Argon2id Memory-Hard Cryptography
+                        </span>
+                        <span class="badge bg-light text-dark border p-2 px-3 fw-semibold small">
+                            <i class="bi bi-grid-3x3-gap-fill text-primary me-1"></i>D3.js 2D Spatial Storage Matrix
+                        </span>
+                        <span class="badge bg-light text-dark border p-2 px-3 fw-semibold small">
+                            <i class="bi bi-graph-up-arrow text-warning me-1"></i>Predictive Sales Velocity & Demand Surge
+                        </span>
+                        <span class="badge bg-light text-dark border p-2 px-3 fw-semibold small">
+                            <i class="bi bi-diagram-3-fill text-info me-1"></i>Multi-Hub Cross-Dock Routing (4 Hubs)
+                        </span>
+                        <span class="badge bg-light text-dark border p-2 px-3 fw-semibold small">
+                            <i class="bi bi-lightning-charge-fill text-danger me-1"></i>Negative Stock Guard & 1-Click Receiving
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Verified Super Admin Credentials Badge -->
+                <div class="p-3 rounded-3 bg-light border d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="fw-bold text-dark small">Sole Super Administrator</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Production Email: nik@gmail.com</div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success fw-bold px-3 py-2">
+                        <i class="bi bi-patch-check-fill me-1"></i>Verified Lead
+                    </span>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-primary w-100 fw-semibold py-2 rounded-3 shadow-sm" data-bs-dismiss="modal">
+                    Close Window
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="liveToast" class="toast align-items-center text-white bg-primary border-0 shadow-lg rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="toastMessage">
+                Notification message
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5.3 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Enterprise Application JavaScript -->
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>
